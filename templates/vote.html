@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet" />
+
+    <title>주제정하기</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=East+Sea+Dokdo&family=Gamja+Flower&display=swap');
+
+        * {
+            font-family: 'Gamja Flower', cursive;
+        }
+
+        .box{
+            background-color: rgb(153, 102, 000);
+            width: 95%;
+            max-width: 600px;
+            padding: 20px;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+        }
+        .myboxx {
+            background-color: rgb(239, 222, 202);
+            width: 95%;
+            max-width: 550px;
+            padding: 20px;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+        }
+
+        .mybox>li {
+            background-color: whitesmoke;
+            padding: 10px 30px 10px 30px;
+            display: flex;
+            flex-direction: row;
+            width: 500px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            min-height: 60px;
+        }
+
+        .mybox>li>h2 {
+
+            max-width: 50%;
+            font-size: 25px;
+            font-weight: 500;
+            align-items: center;
+            justify-content: center;
+            margin-right: auto;
+            margin-bottom: 0px;
+            flex-grow: 1;
+        }
+
+        .submit_button {
+            float: right;
+        }
+    </style>
+    <script>
+        $(document).ready(function () {
+            start_vote()
+            show_subject();
+        });
+
+        //url값으로 모든 DB의 핵심 식별자인 jo_idx 와 일치여부 확인용
+        var ac = document.location.href.split("vote_go/")
+        var jo_id = ac[1]
+        var chec=true;
+        //투표와 관련된 voteDB 데이터를 식별자를 이용해서 추린 후, 투표 진행중이면 투표지+버튼 출력 or 투표가 끝났으면 결과보기 버튼으로 전환
+        function start_vote() {
+            fetch('/infoDB').then(rest => rest.json()).then(data => {
+                let ab = data['result']
+                let jo_idx = jo_id
+                $('#end_button_div').empty()
+                $('#vote_count').empty()
+                $('#start_info').empty()
+                ab.forEach((a) => {
+                    if (a['jo_idx'] == jo_idx) {
+                        startcheck = a['vote_active']
+                        total_vote = a['total_vote']
+                        jo_name = a['jo_name']
+                    }
+                })  // 식별자로 필요한 데이터 추리기
+                if (startcheck == true) {
+                    let vote_btns_html = `<div  id="end_button_div">
+                                            <button type="button" onclick="submit_vote()" class="btn btn-light" id="submit_button"
+                                                style="float:right; margin-top: 20px;">투표하기!</button>
+                                        </div>`
+                    let temp_html = `<h3 style="margin-bottom: 20px">현재 투표자 수 : ${total_vote}명 !</h3>
+                                    <div style="width:500px; height: 100px; align-items: center;">
+                                     <button type="button" onclick="end_vote(${jo_idx})" class="btn btn-danger" id="end_button"
+                                    style="width:500px; float:right">마감하기!</button>
+                                     `
+                    let temp_html3 = `<h1 style="text-align: center; margin-bottom: 30px">투표 용지</h1>
+                                        <h3 style="margin-top: 20px; text-align: center;">[${jo_name}] 의 투표지입니다!</h3>
+                                        <h5 style="margin: 20px 0px 20px 70px; float:right">투표하고 싶으신 목록에 체크를 해주세요!</h5>
+                                    `
+                    $('#end_button_div').append(vote_btns_html)
+                    $('#vote_count').append(temp_html)
+                    $('#start_info').append(temp_html3)
+                } // 투표 진행중일 경우 투표체크항목과 버튼 출력
+                else {
+                    chec=false;
+                    let temp_html2 = `<h4>참여한 투표자 수 : ${total_vote}명 !</h4>
+                                    <div style="width:500px; height: 50px;">
+                                     <button type="button" onClick="go_result(${jo_idx})" class="btn btn-secondary" id="end_button"
+                                    style="width:500px; float:right; font-size: x-large; background-color: rgb(29, 84, 63); margin-top: 20px">결과보기!</button>`
+                    let temp_html3 = `<h1 style = "text-align: center;">투표 용지</h1>
+                                        <h2 style="margin-top: 20px; text-align: center;">[${jo_name}] 의 투표지입니다!</h2>
+                                        <h4 style="margin: 20px 0px 40px 0px;padding: 20px 20px 20px 20px; border-radius: 10px; color:whitesmoke; background-color: rgb(29, 84, 63); font-size: 1.2pc; text-align: center;">아쉽지만 투표가 마감되었어요! 결과를 확인해주세요!</h4>
+                                        </div>
+                                        <h6 style="margin: 0px 0px 0px 0px; float:right">※투표결과 보기는 최하단에 있어요!</h6>
+                                        <h4 style="margin: 0px 0px 10px 0px; float:left"><투표 주제 목록></h4>
+                                        `
+                    $('#vote_count').append(temp_html2)
+                    $('#start_info').append(temp_html3)
+                }
+            })
+        } //투표가 마감됐으면 결과보기 버튼 출력
+
+        //이전에 수집된 투표 리스트를 페이지에 뿌려주기
+        //위의 데이터와 DB가 달라서 따로 진행했음. DB를 하나로 통일하는게 더 나았을 수도 있을 것 같다.
+        function show_subject() {
+            fetch('/subject').then(res => res.json()).then(data => {
+                let rows = data['result']
+                $('#subject_list').empty()
+                rows.forEach((a) => {
+                    if (a['jo_idx'] == jo_id) {
+                        let jo_idx = a['jo_idx']
+                        let subject = a['subject']
+                        let sub_idx = a['sub_idx']
+                        let jo_name = a['jo_name']
+                        if (chec && sub_idx!=0) {
+                            let temp_html = `
+                                        <li style="border-radius:7px; margin-top:10px;">
+                                            <h2>${subject}</h2>
+                                            <input class="form-check-input" type="radio" name="flexRadioDefault" value=${sub_idx} id="label${sub_idx}" >
+                                            <label class="form-check-label" for="flexRadioDefault1">
+                                            </label>
+                                        </li>`
+                            $('#subject_list').append(temp_html)
+                        } else if(!chec && sub_idx!=0){
+                            let temp_html = `
+                                        <li style="border-radius:7px;">
+                                            <h2>${subject}</h2>
+                                        </li>`
+                            $('#subject_list').append(temp_html)
+                        }
+                    }
+                })
+            })
+        }
+
+        //투표할 항목을 체크하고, 제출하는 기능. Radio버튼이 입력되어 있을때만 작동하고, 아니면 주제를 선택해달라는 alert 출력
+        function submit_vote() {
+            if ($('input:radio[name="flexRadioDefault"]').is(':checked')) {
+                let b = jo_id
+                let a = $('input:radio[name="flexRadioDefault"]:checked').val();
+                let formData = new FormData();
+                formData.append("vote_give", a);
+                formData.append("jo_give", b)
+                fetch('/submit', { method: "POST", body: formData, }).then((respa) => respa.json()).then((data) => {
+                    alert(data["msg"]);
+                    window.location.reload();
+                });
+            } else {
+                alert('주제를 선택해주세요!')
+            }
+        }
+
+        //원하는 만큼 투표를 받은 후, 투표를 마감하는 기능
+        function end_vote(num) {
+            let chk = confirm("정말로 투표를 마감하시겠어요?");
+            if (chk) {
+                let b = num;
+                let formData = new FormData();
+                formData.append("jo_id", b);
+                fetch('/finalDB', { method: "POST", body: formData, }).then((resp) => resp.json()).then((data) => {
+                    alert(data["msg"]);
+                    window.location.reload();
+                });
+            } else { }
+        }
+        //투표가 종료 된 후 나오는 페이지 내 최하단의 결과 보기 버튼을 누르면 실행되는 함수. 자기 조의 결과와 댓글만 출력되는 페이지로 이동함.
+        //메인 페이지의 결과 확인 버튼은 모든 조의 결과와 모든 조의 댓글이 전부 보임.
+        function go_result(num) {
+            window.location.replace(ac[0] + 'result_go/' + num)
+
+        }
+    </script>
+</head>
+
+<body style="background-color: rgb(29, 84, 63);">
+    <a name="Top"></a>
+    <div class="box">
+        <div class="myboxx">
+            <div id="start_info">
+                <h1>투표 용지</h1>
+                <h2 style="margin-top: 20px; text-align: center;">[${jo_name}] 의 투표지입니다!</h2>
+                <h4 style="margin: 20px 0px 20px 70px; padding: 20px 20px 20px 20px; border-radius: 10px;float:right;  color:whitesmoke; background-color: rgb(29, 84, 63);">아쉽지만 투표가 마감되었어요! 결과를 확인해주세요!</h4>
+                <h6 style="margin: 0px 0px 0px 40px; float:right">※투표결과 보기는 최하단에 있어요!</h6>
+                <h4 style="margin: 0px 0px 10px 0px; float:legt"><투표 주제 목록></h4>
+            </div>
+            <div class="mybox" id="subject_list">
+                <li style="border-radius:7px; margin-top:10px;">
+                    <h2>test1</h2>
+                    <input class="form-check-input" type="radio" name="flexRadioDefault" value=${sub_idx} id="label${sub_idx}" >
+                    <label class="form-check-label" for="flexRadioDefault1">
+                    </label>
+                </li>
+                <li style="border-radius:7px; margin-top:10px;">
+                    <h2>test2</h2>
+                    <input class="form-check-input" type="radio" name="flexRadioDefault" value=${sub_idx} id="label${sub_idx}" >
+                    <label class="form-check-label" for="flexRadioDefault1">
+                    </label>
+                </li>
+                <li style="border-radius:7px; margin-top:10px;">
+                    <h2>test3</h2>
+                    <input class="form-check-input" type="radio" name="flexRadioDefault" value=${sub_idx} id="label${sub_idx}" >
+                    <label class="form-check-label" for="flexRadioDefault1">
+                    </label>
+                </li>
+            </div>
+            <div id="end_button_div" style="width:500px; height:50px;">
+                <button type="button" onclick="submit_vote()" class="btn btn-light" id="submit_button"
+                    style="float:right; margin-top: 40px;"></button>
+            </div>
+            <hr style=" width:500px;margin: 30px auto 10px auto" />
+            <div class id="vote_count" style="width: 600px; height:300px; margin: 30px auto 50px auto">
+                <div style="width: 300px; height: 100px; float:left;">
+                    <h3></h3>
+                </div>
+                <div id="end_button" style="width:300px; height: 100px; float:left;">
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="position: fixed; bottom: 30px; right: 30px;">
+        <a href="#Top" onclick="window.location.href = '/'" button type="button" class="btn btn-warning"
+            style="margin:auto; display:block; height:50px; width:140px; font-size: x-large;">돌아가기</a>
+</body>
+
+</html>

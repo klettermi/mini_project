@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet" />
+
+    <title>주제정하기</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=East+Sea+Dokdo&family=Gamja+Flower&display=swap');
+
+        * {
+            font-family: 'Gamja Flower', cursive;
+        }
+
+        .mypic {
+            padding-top: 40px;
+            
+        }
+    </style>
+    <script>
+        $(document).ready(function () {
+            show_infoDB();
+        });
+
+        function save_infoDB() {
+            let jo_name = $('#jo_name').val()
+
+            let formData = new FormData();
+            formData.append("jo_name_give", jo_name);
+            fetch('/infoDB', { method: "POST", body: formData, }).then((response) => response.json()).then((data) => {
+                alert(data["msg"]);
+                window.location.reload();
+            });
+        }
+        //각 조의 진행 상황(주제입력, 투표)에 따라 버튼을 다르게 출력해주는 함수.
+        function show_infoDB() {
+            fetch('/infoDB').then(res => res.json()).then(data => {
+                let rows = data['result']
+
+                $('#info_info').empty()
+
+                rows.forEach((a) => {
+                    let jo_name = a['jo_name']
+                    let sub_active = a['sub_active']
+                    let vote_active = a['vote_active']
+                    let jo_idx = a['jo_idx']
+                    if (sub_active == true) {
+                        let temp_html = `<div class="col" style="margin: 20px">
+                                        <div class="card h-80">
+                                            <div class="card-body">
+                                            <h5 class="card-title" style="text-align:center; font-size:x-large">${jo_name}</h5>
+                                            <a onClick="onSubBottonClick('${jo_idx}')" button type="button" class="btn btn-warning"
+                                                style="margin:auto; display:block;">의견 내기</a>
+                                            </div>
+                                        </div>
+                                        </div>`
+
+                        $('#info_info').append(temp_html)
+                    }
+                    // 투표 진행중이라면
+                    else if (vote_active == true) {
+                        let temp_html = `<div class="col" style="margin: 20px">
+                                        <div class="card h-80">
+                                            <div class="card-body">
+                                            <h5 class="card-title" style="text-align:center; font-size:x-large">${jo_name}</h5>
+                                            <a onClick="onVoteButtonClick('${jo_idx}')" button type="button" class="btn btn-success"
+                                                style="margin:auto; display:block;">투표 보기</a>
+                                            </div>
+                                        </div>
+                                        </div>`
+                        $('#info_info').append(temp_html)
+                    }//투표가 완전히 끝났으면
+                    else {
+                        let temp_html = `<div class="col" style="margin: 20px">
+                                        <div class="card h-80">
+                                            <div class="card-body">
+                                            <h5 class="card-title" style="text-align:center; font-size:x-large">${jo_name}</h5>
+                                            <a onClick="onVoteButtonClick('${jo_idx}')" button type="button" class="btn btn-secondary"
+                                                style="margin:auto; display:block;">결과 보기</a>
+                                            </div>
+                                        </div>
+                                        </div>`
+                        $('#info_info').append(temp_html)
+                    }
+                })
+            })
+        }
+        function onVoteButtonClick(jo_idx) {
+            window.location.href = 'vote_go/' + jo_idx;
+        }
+        function onSubBottonClick(jo_idx) {
+            window.location.href = 'sub_go/' + jo_idx;
+        }
+        function find_jo() {
+            let name = $('#jo_name').val()
+            console.log(name)
+            let formData = new FormData();
+            formData.append("name_give", name)
+            fetch('/findjo', { method: "POST", body: formData, }).then((respnse) => respnse.json()).then((data) => {
+                if (data['result'] == -1) {
+                    alert('없는 이름이예요!')
+                }
+                else {
+                    let a = data['result']
+                    window.location.href = 'result_go/' + a;
+                }
+            })
+        }
+    </script>
+</head>
+
+<body style="background-color: rgb(239, 222, 202);">
+  <a name="Top"></a>
+    <div class="myboxx">
+        <div class="mypic">
+            <h1 style="text-align: center;">모두 함께 투표를 해보아요!</h1>
+        </div>
+        <h5 style="text-align: center;margin-top: 40px;">조이름을 입력하신 후 원하시는 버튼을 눌러주세요!</h5>
+        <div class="input-group" style="width: 400px; margin: 0px auto 40px auto">
+            <input type="text" id="jo_name" class="form-control" placeholder="ex) 8조"
+                aria-label="Recipient's username with two button addons">
+            <button class="btn btn-success" type="button" style="margin-right: 2px; margin-left: 2px;"
+                onclick="save_infoDB()">투표 만들기</button>
+            <button class="btn btn-secondary" type="button" onClick="find_jo()">결과 확인</button>
+            <div style="margin: 10px auto 10px auto">
+              <button class="btn btn-dark" type="button"
+                  onClick="window.location.href='result_go/'+0 " style="width: 300px; margin-top: 10px; background-color: rgb(000, 102, 102);">진행된 모든 투표의 결과 보기!</button>
+           </div>
+        </div>
+    </div>
+    <hr style="height: 3px; margin: auto 200px 50px 200px;" />
+
+    <!-- <div style="align-items: center; justify-content: center; margin: auto 200px 50px 200px">
+        <button style="width:400px; height:40px;" class="btn btn-dark" type="button"
+            onClick="window.location.href='result_go/'+0 ">진행된 모든 투표의 결과 보기!</button>
+    </div> -->
+
+    <div style=" background-color:rgb(29, 84, 63); margin: 2px auto auto auto; width: 1200px; border-radius: 50px;">
+        <h4 style="text-align: center; color:white; padding-top: 30px;font-size: 2pc;">투표를 원하시는 조를 눌러주세요!</h4>
+        <div class="row row-cols-1 row-cols-md-4 g-4" id="info_info" style="margin: auto 200px 50px 200px">
+            <div class="col" style="margin: 20px">
+                <div class="card h-80">
+                    <div class="card-body">
+                        <h5 class="card-title">Card title</h5>
+                        <a onClick="window.location.href='vote_go'" button type="button" class="btn btn-success"
+                            style="margin:auto; display:block;">투표 하기</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card h-80">
+                    <div class="card-body">
+                        <h5 class="card-title">Card title</h5>
+                        <a onClick="window.location.href='vote_go'" button type="button" class="btn btn-success"
+                            style="margin:auto; display:block;">투표 하기</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card h-80">
+                    <div class="card-body">
+                        <h5 class="card-title">Card title</h5>
+                        <a onClick="window.location.href='vote_go'" button type="button" class="btn btn-success"
+                            style="margin:auto; display:block;">투표 하기</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card h-80">
+
+                    <div class="card-body">
+                        <h5 class="card-title">Card title</h5>
+                        <a onClick="window.location.href='vote_go'" button type="button" class="btn btn-success"
+                            style="margin:auto; display:block;">투표 하기</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  
+    </div>
+    <div style="position: fixed; bottom: 30px; right: 30px;">
+        <a href="#Top" button type="button" class="btn btn-success"
+            style="margin:auto; display:block; height:50px; width:100px; font-size: x-large;">맨위로</a>
+    </div>
+</body>
+
+</html>

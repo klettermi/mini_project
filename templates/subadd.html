@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+
+    <title>Test page</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@200;300;400;500;600;700;900&display=swap"
+        rel="stylesheet" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=East+Sea+Dokdo&family=Gamja+Flower&display=swap');
+
+        * {
+            font-family: 'Gamja Flower', cursive;
+        }
+
+        .box{
+            background-color: rgb(153, 102, 000);
+            width: 95%;
+            max-width: 600px;
+            padding: 20px;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+        }
+        .myboxx {
+            background-color: rgb(239, 222, 202);
+            width: 95%;
+            max-width: 550px;
+            padding: 20px;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+        }
+
+        .mybox>li {
+            background-color: whitesmoke;
+            padding: 10px 30px 10px 30px;
+            display: flex;
+            flex-direction: row;
+            width: 500px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            min-height: 60px;
+        }
+
+        .mybox>li>h2 {
+
+            max-width: 50%;
+            font-size: 25px;
+            font-weight: 500;
+            align-items: center;
+            justify-content: center;
+            margin-right: auto;
+            margin-bottom: 0px;
+            flex-grow: 1;
+        }
+
+        .submit_button {
+            float: right;
+        }
+    </style>
+    <script>
+        $(document).ready(function () {
+            start_sub();
+            show_subject();
+        });
+        //url값으로 모든 DB의 핵심 식별자인 jo_idx 와 일치여부 확인용
+        var ac = document.location.href.split("sub_go/")
+        var jo_id = ac[1]
+
+        //infoDB에서 조 정보를 받아서, 주제를 입력중인 상황인지 아닌지 판단. 주제 입력이 끝났으면 돌려보내고, 입력중이면 입력할수 있도록 만듬
+        function start_sub() {
+            fetch('/infoDB').then(resv => resv.json()).then(data => {
+                let a = data['result']
+                a.forEach((a) => {
+                    if (a['jo_idx'] == jo_id) {
+                        startcheck = a['sub_active']
+                    }
+                })
+                if (startcheck == true) {
+                    let temp_html = `
+                                    <button type="button" onclick="start_vote(${jo_id}); window.location.reload();" class="btn btn-success" id="end_button"
+                                    style="margin: 10px auto 10px auto; width:200px;  font-size: large; background-color:rgb(29, 84, 63)">투표 시작!!!</button>
+                                    `
+
+                    let temp_html2 = `<input type="text" class="form-control" id="subinput" placeholder="주제를 입력하세요!"
+                                    style="width:500px; height:60px; font-size:25px; border-radius:5px;">
+                                      <button onclick="submit_sub()" class="btn btn-success" type="button" id="button-addon2"
+                                    style="margin: 10px 0px 10px 312px; font-size: 1.02pc; border-radius:5px; background-color:rgb(29, 84, 63)">등록하기</button>`
+                    $('#startvote').append(temp_html)
+                    $('#input_sub').append(temp_html2)
+                } else {
+                    alert("주제 등록이 끝났습니다.")
+                    window.location.href = '/'
+                }
+            })
+        }
+
+        //입력된 주제들을 DB에서 불러와서 페이지에 뿌려주는 함수. for문을 돌면서 식별자로 걸러낸 후 필요한 데이터만 출력.
+        function show_subject() {
+            fetch('/subject').then(res => res.json()).then(data => {
+                let rows = data['result']
+                $('#subject_list').empty()
+                rows.forEach((a) => {
+                    let jo_idd = jo_id
+                    let jo_idx = a['jo_idx']
+                    let subject = a['subject']
+                    let sub_idx = a['sub_idx']
+                    if (jo_idx == jo_idd && sub_idx != 0) {
+                        let temp_html = `<li style="border-radius:7px; margin-top:10px;">
+                                            <h2>${subject}</h2>
+                                            <svg type="button" id="tcv" onclick="delete_sub(${sub_idx})" value="${jo_idx}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="currentcolor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                                                    <path d="M28 6 L6 6 8 30 24 30 26 6 4 6 M16 12 L16 24 M21 12 L20 24 M11 12 L12 24 M12 6 L13 2 19 2 20 6" />
+                                            </svg>
+                                        </li>`
+                        $('#subject_list').append(temp_html)
+                    }
+                })
+            })
+        }
+        //주제 입력하고 등록하기 버튼을 누르면 실행되는 함수. 입력된 주제를 DB에 POST
+        function submit_sub() {
+            let a = $('#subinput').val();
+            let b = jo_id;
+            let formData = new FormData();
+            formData.append("sub_give", a);
+            formData.append("jo_give", b);
+            fetch('/submitsub', { method: "POST", body: formData, }).then((respc) => respc.json()).then((data3) => {
+                alert(data3["msg"]);
+                window.location.reload();
+            })
+        }
+        //휴지통 아이콘이 눌러진 주제를 삭제하는 함수. sub_idx값을 전달해서 0으로 초기화하고, 0인경우 출력만 안 되게 해놨음..DB에는 데이터 남아있음ㅜ
+        function delete_sub(num) {
+            let con = confirm("이 주제를 삭제 하시겠습니까?");
+            if (con) {
+                let subnum = num;
+                let jonum = jo_id;
+                let formData = new FormData();
+                formData.append("sub_give", subnum);
+                formData.append("jo_give", jonum);
+                fetch('/delsub', { method: "POST", body: formData, }).then((respca) => respca.json()).then((data4) => {
+                    alert(data4["msg"]);
+                    window.location.reload();
+                })
+            } else { }
+        }
+        //주제 입력이 다 끝나고 투표시작하기 버튼을 누르면 실행됨. 넘어가서 주제수집 boolean->flase && 투표 boolean->ture DB에 업데이트
+        function start_vote(num) {
+            let ck = confirm("주제 입력을 끝낼까요?")
+            if (ck) {
+                let a = num
+                let formData = new FormData();
+                formData.append("jo_idx", a);
+                fetch('/startvote', { method: "POST", body: formData, }).then((respz) => respz.json()).then((data) => {
+                    alert(data["msg"]);
+                })
+            } else { }
+        }
+    </script>
+    <html>
+
+<body style="background-color: rgb(29, 84, 63);">
+    <div class="box">
+        <div class="myboxx">
+            <div class="mypic">
+                <h1 style="text-align: center; margin: 20px auto 30px auto;">주제를 정해보아요!</h1>
+            </div>
+            <div class="input-group mb-3" id="input_sub" style="max-width:80%;height:110px;margin: 10px auto 10px auto ">
+            </div>
+            <hr style="margin: 20px auto 20px auto" />
+            <div class="mybox" id="subject_list" style=" margin: 10px auto 20px auto">
+                <div style="width: 650px; height: 80px; float:left;">
+                    <h3 style="width:550px; height: 60px; float:left;"></h3>
+                </div>
+            </div>
+            <div style="width: 400px; height:300px; margin: 10px auto 10px auto;display:flex; flex-flow: row nowrap;justify-content: center">
+                <div id="startvote" style="width:300px; height: 80px;display:flex; flex-flow: row nowrap;justify-content: center">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="position: fixed; bottom: 30px; right: 30px;">
+        <a herf='#head' onclick="window.location.href = '/'" button type="button" class="btn btn-warning"
+            style="margin:auto; display:block; height:50px; width:140px; font-size: x-large;">돌아가기</a>
+    </div>
+</body>
+
+</html>
